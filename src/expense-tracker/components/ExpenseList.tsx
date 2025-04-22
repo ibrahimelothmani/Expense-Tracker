@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useLanguage } from "../../i18n/LanguageContext";
 import { categories as translatedCategories } from "../../i18n/translations";
 

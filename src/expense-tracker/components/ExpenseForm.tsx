@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { z } from "zod";
 import { useLanguage } from "../../i18n/LanguageContext";
-import { categories as translatedCategories } from "../../i18n/translations";
+import { categories as translatedCategories, TranslationKey } from "../../i18n/translations";
 
 // Create schema for form validation
-const createSchema = (t: (key: string) => string) => z.object({
+const createSchema = (t: (key: TranslationKey) => string) => z.object({
   description: z.string().min(3, { message: t('validationMinChars') }),
   amount: z.number({ invalid_type_error: t('validationRequired') }).min(0.01, { message: t('validationAmount') }),
   category: z.string().min(1, { message: t('validationRequired') })
@@ -36,7 +36,8 @@ const ExpenseForm = ({ onSubmit }: Props) => {
     
     try {
       const schema = createSchema(t);
-      const data = schema.parse({
+      // Parse and validate the data
+      schema.parse({
         description,
         amount: parseFloat(amount.toString()),
         category
