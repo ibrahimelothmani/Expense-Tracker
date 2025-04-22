@@ -1,38 +1,56 @@
 import { useState } from "react";
-import { categories } from "./ExpenseFilter";
 import { z } from "zod";
+import { useLanguage } from "../../i18n/LanguageContext";
+import { categories as translatedCategories } from "../../i18n/translations";
 
 // Create schema for form validation
-const schema = z.object({
-  description: z.string().min(3, { message: "Description should be at least 3 characters" }),
-  amount: z.number({ invalid_type_error: "Amount is required" }).min(0.01, { message: "Amount must be greater than 0" }),
-  category: z.string().min(1, { message: "Category is required" })
+const createSchema = (t: (key: string) => string) => z.object({
+  description: z.string().min(3, { message: t('validationMinChars') }),
+  amount: z.number({ invalid_type_error: t('validationRequired') }).min(0.01, { message: t('validationAmount') }),
+  category: z.string().min(1, { message: t('validationRequired') })
 });
 
 // Type for the data that will be submitted through the form
-export type ExpenseFormData = z.infer<typeof schema>;
+export type ExpenseFormData = {
+  description: string;
+  amount: number;
+  category: string;
+};
 
 interface Props {
   onSubmit: (data: ExpenseFormData) => void;
 }
 
 const ExpenseForm = ({ onSubmit }: Props) => {
+  const { t, language, isRtl } = useLanguage();
   const [description, setDescription] = useState("");
   const [amount, setAmount] = useState<number | string>("");
   const [category, setCategory] = useState("");
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
+  // Get the categories for the current language
+  const categories = translatedCategories[language];
+
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
     
     try {
+      const schema = createSchema(t);
       const data = schema.parse({
         description,
         amount: parseFloat(amount.toString()),
         category
       });
       
-      onSubmit(data);
+      // Find the English category equivalent since we store category values in English
+      const categoryIndex = translatedCategories[language].findIndex(cat => cat === category);
+      const englishCategory = translatedCategories.en[categoryIndex];
+      
+      onSubmit({
+        description,
+        amount: parseFloat(amount.toString()),
+        category: englishCategory || category
+      });
       
       // Reset form after submission
       setDescription("");
@@ -56,7 +74,7 @@ const ExpenseForm = ({ onSubmit }: Props) => {
       <div className="row">
         <div className="col-md-6 mb-3">
           <label htmlFor="description" className="form-label">
-            Description
+            {t('description')}
           </label>
           <input 
             id="description" 
@@ -64,14 +82,15 @@ const ExpenseForm = ({ onSubmit }: Props) => {
             className={`form-control ${errors.description ? "is-invalid" : ""}`}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="What was this expense for?"
+            placeholder={t('expenseDescription')}
+            dir={isRtl ? "rtl" : "ltr"}
           />
           {errors.description && <div className="invalid-feedback">{errors.description}</div>}
         </div>
         
         <div className="col-md-6 mb-3">
           <label htmlFor="amount" className="form-label">
-            Amount
+            {t('amount')}
           </label>
           <div className="input-group">
             <span className="input-group-text">$</span>
@@ -83,6 +102,7 @@ const ExpenseForm = ({ onSubmit }: Props) => {
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               placeholder="0.00"
+              dir="ltr"
             />
             {errors.amount && <div className="invalid-feedback">{errors.amount}</div>}
           </div>
@@ -91,15 +111,16 @@ const ExpenseForm = ({ onSubmit }: Props) => {
       
       <div className="mb-3">
         <label htmlFor="category" className="form-label">
-          Category
+          {t('category')}
         </label>
         <select 
           className={`form-select ${errors.category ? "is-invalid" : ""}`} 
           id="category"
           value={category}
           onChange={(e) => setCategory(e.target.value)}
+          dir={isRtl ? "rtl" : "ltr"}
         >
-          <option value="">Select Category</option>
+          <option value="">{t('selectCategory')}</option>
           {categories.map((category) => (
             <option key={category} value={category}>
               {category}
@@ -109,7 +130,7 @@ const ExpenseForm = ({ onSubmit }: Props) => {
         {errors.category && <div className="invalid-feedback">{errors.category}</div>}
       </div>
       
-      <button type="submit" className="btn btn-primary w-100">Add Expense</button>
+      <button type="submit" className="btn btn-primary w-100">{t('addExpense')}</button>
     </form>
   );
 };

@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import { useLanguage } from "../../i18n/LanguageContext";
+import { categories as translatedCategories } from "../../i18n/translations";
 
 interface Expense {
   id: number;
@@ -13,11 +15,12 @@ interface Props {
 }
 
 const ExpenseList = ({ expenses, onDelete }: Props) => {
+  const { t, language } = useLanguage();
   const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null);
   
   if (expenses.length === 0) return (
     <div className="alert alert-info" role="alert">
-      No expenses to display. Add an expense to get started!
+      {t('noExpenses')}
     </div>
   );
 
@@ -26,15 +29,21 @@ const ExpenseList = ({ expenses, onDelete }: Props) => {
     0
   );
 
+  // Function to translate category from English to current language
+  const translateCategory = (englishCategory: string): string => {
+    const index = translatedCategories.en.findIndex(cat => cat === englishCategory);
+    return index !== -1 ? translatedCategories[language][index] : englishCategory;
+  };
+
   return (
     <div className="table-responsive">
       <table className="table table-hover">
         <thead className="table-light">
           <tr>
-            <th>Description</th>
-            <th>Amount</th>
-            <th>Category</th>
-            <th>Action</th>
+            <th>{t('description')}</th>
+            <th>{t('amount')}</th>
+            <th>{t('category')}</th>
+            <th></th>
           </tr>
         </thead>
         <tbody>
@@ -43,7 +52,7 @@ const ExpenseList = ({ expenses, onDelete }: Props) => {
               <td>{expense.description}</td>
               <td>${expense.amount.toFixed(2)}</td>
               <td>
-                <span className="badge bg-secondary">{expense.category}</span>
+                <span className="badge bg-secondary">{translateCategory(expense.category)}</span>
               </td>
               <td>
                 {deleteConfirm === expense.id ? (
@@ -55,13 +64,13 @@ const ExpenseList = ({ expenses, onDelete }: Props) => {
                         setDeleteConfirm(null);
                       }}
                     >
-                      Confirm
+                      {t('confirm')}
                     </button>
                     <button
                       className="btn btn-sm btn-secondary"
                       onClick={() => setDeleteConfirm(null)}
                     >
-                      Cancel
+                      {t('cancel')}
                     </button>
                   </>
                 ) : (
@@ -69,7 +78,7 @@ const ExpenseList = ({ expenses, onDelete }: Props) => {
                     className="btn btn-sm btn-outline-danger"
                     onClick={() => setDeleteConfirm(expense.id)}
                   >
-                    Delete
+                    {t('delete')}
                   </button>
                 )}
               </td>
@@ -78,7 +87,7 @@ const ExpenseList = ({ expenses, onDelete }: Props) => {
         </tbody>
         <tfoot className="table-group-divider">
           <tr>
-            <td className="fw-bold">Total</td>
+            <td className="fw-bold">{t('totalExpenses')}</td>
             <td className="fw-bold">${totalAmount.toFixed(2)}</td>
             <td colSpan={2}></td>
           </tr>
